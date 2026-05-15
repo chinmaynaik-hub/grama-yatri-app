@@ -45,6 +45,7 @@ class AuthRepository(
         }
     }
 
+    @Suppress("DEPRECATION")
     suspend fun checkAccountExists(email: String): AuthOperationResult {
         return try {
             val signInMethods = auth.fetchSignInMethodsForEmail(email).await().signInMethods.orEmpty()

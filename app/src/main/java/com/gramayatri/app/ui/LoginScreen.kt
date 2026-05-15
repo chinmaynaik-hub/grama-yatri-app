@@ -50,7 +50,8 @@ fun LoginScreen(
 ) {
     var email by rememberSaveable { mutableStateOf("") }
     var password by rememberSaveable { mutableStateOf("") }
-    var lastCheckedEmail by rememberSaveable { mutableStateOf("") }
+    val lastCheckedEmailState = rememberSaveable { mutableStateOf("") }
+    val lastCheckedEmail = lastCheckedEmailState.value
 
     val normalizedEmail = email.trim()
     val canCheckEmail = isValidEmail(normalizedEmail)
@@ -98,7 +99,7 @@ fun LoginScreen(
                 .fillMaxWidth()
                 .onFocusChanged { focusState ->
                     if (!focusState.isFocused && canCheckEmail) {
-                        lastCheckedEmail = normalizedEmail
+                        lastCheckedEmailState.value = normalizedEmail
                         onCheckEmailAccount(normalizedEmail)
                     }
                 },

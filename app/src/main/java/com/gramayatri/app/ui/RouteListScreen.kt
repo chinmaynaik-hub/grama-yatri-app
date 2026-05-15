@@ -19,17 +19,15 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.ArrowForward
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.DirectionsBus
 import androidx.compose.material.icons.filled.Place
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Brush
@@ -51,9 +49,12 @@ fun RouteListScreen(
     onAddRoute: (String, String, String, (String?, String?) -> Unit) -> Unit = { _, _, _, _ -> },
     onRouteSelected: (BusRoute) -> Unit
 ) {
-    var showAddRouteDialog by rememberSaveable { mutableStateOf(false) }
-    var addRouteInfoMessage by rememberSaveable { mutableStateOf<String?>(null) }
-    var addRouteDialogError by rememberSaveable { mutableStateOf<String?>(null) }
+    val showAddRouteDialogState = rememberSaveable { mutableStateOf(false) }
+    val addRouteInfoMessageState = rememberSaveable { mutableStateOf<String?>(null) }
+    val addRouteDialogErrorState = rememberSaveable { mutableStateOf<String?>(null) }
+    val showAddRouteDialog = showAddRouteDialogState.value
+    val addRouteInfoMessage = addRouteInfoMessageState.value
+    val addRouteDialogError = addRouteDialogErrorState.value
 
     Scaffold(
         topBar = {
@@ -69,9 +70,9 @@ fun RouteListScreen(
             if (showAddRouteAction) {
                 FloatingActionButton(
                     onClick = {
-                        addRouteInfoMessage = null
-                        addRouteDialogError = null
-                        showAddRouteDialog = true
+                        addRouteInfoMessageState.value = null
+                        addRouteDialogErrorState.value = null
+                        showAddRouteDialogState.value = true
                     },
                     containerColor = Color(0xFF5B47D6),
                     contentColor = Color.White
@@ -127,20 +128,20 @@ fun RouteListScreen(
             errorMessage = addRouteDialogError,
             onDismiss = {
                 if (!isAddingRoute) {
-                    showAddRouteDialog = false
-                    addRouteDialogError = null
+                    showAddRouteDialogState.value = false
+                    addRouteDialogErrorState.value = null
                 }
             },
             onSave = { routeName, routeDescription, stopsInput ->
-                addRouteDialogError = null
+                addRouteDialogErrorState.value = null
                 onAddRoute(routeName, routeDescription, stopsInput) { successMessage, error ->
                     if (successMessage != null) {
-                        addRouteInfoMessage = successMessage
-                        addRouteDialogError = null
-                        showAddRouteDialog = false
+                        addRouteInfoMessageState.value = successMessage
+                        addRouteDialogErrorState.value = null
+                        showAddRouteDialogState.value = false
                     } else if (error != null) {
-                        addRouteInfoMessage = null
-                        addRouteDialogError = error
+                        addRouteInfoMessageState.value = null
+                        addRouteDialogErrorState.value = error
                     }
                 }
             }
@@ -185,9 +186,9 @@ private fun AddRouteDialog(
     onDismiss: () -> Unit,
     onSave: (String, String, String) -> Unit
 ) {
-    var routeName by rememberSaveable { mutableStateOf("") }
-    var routeDescription by rememberSaveable { mutableStateOf("") }
-    var stopDrafts by rememberSaveable(stateSaver = stopDraftListSaver) {
+    val routeNameState = rememberSaveable { mutableStateOf("") }
+    val routeDescriptionState = rememberSaveable { mutableStateOf("") }
+    val stopDraftsState = rememberSaveable(stateSaver = stopDraftListSaver) {
         mutableStateOf(
             listOf(
                 StopDraft(name = "Start Stop", minutesFromPrevious = "0"),
@@ -196,7 +197,11 @@ private fun AddRouteDialog(
             )
         )
     }
-    var localErrorMessage by rememberSaveable { mutableStateOf<String?>(null) }
+    val localErrorMessageState = rememberSaveable { mutableStateOf<String?>(null) }
+    val routeName = routeNameState.value
+    val routeDescription = routeDescriptionState.value
+    val stopDrafts = stopDraftsState.value
+    val localErrorMessage = localErrorMessageState.value
     val displayedErrorMessage = localErrorMessage ?: errorMessage
 
     AlertDialog(
@@ -210,8 +215,8 @@ private fun AddRouteDialog(
                 OutlinedTextField(
                     value = routeName,
                     onValueChange = {
-                        routeName = it
-                        localErrorMessage = null
+                        routeNameState.value = it
+                        localErrorMessageState.value = null
                     },
                     label = { Text("Route name") },
                     singleLine = true,
@@ -221,8 +226,8 @@ private fun AddRouteDialog(
                 OutlinedTextField(
                     value = routeDescription,
                     onValueChange = {
-                        routeDescription = it
-                        localErrorMessage = null
+                        routeDescriptionState.value = it
+                        localErrorMessageState.value = null
                     },
                     label = { Text("Description") },
                     enabled = !isSaving,
@@ -255,15 +260,15 @@ private fun AddRouteDialog(
                                 isSaving = isSaving,
                                 canDelete = stopDrafts.size > 2,
                                 onUpdate = { updated ->
-                                    localErrorMessage = null
-                                    stopDrafts = stopDrafts.toMutableList().also { drafts ->
+                                    localErrorMessageState.value = null
+                                    stopDraftsState.value = stopDrafts.toMutableList().also { drafts ->
                                         drafts[index] = updated
                                     }
                                 },
                                 onDelete = {
-                                    localErrorMessage = null
+                                    localErrorMessageState.value = null
                                     if (stopDrafts.size > 2) {
-                                        stopDrafts = stopDrafts.filterIndexed { currentIndex, _ ->
+                                        stopDraftsState.value = stopDrafts.filterIndexed { currentIndex, _ ->
                                             currentIndex != index
                                         }
                                     }
@@ -273,8 +278,8 @@ private fun AddRouteDialog(
 
                         OutlinedButton(
                             onClick = {
-                                localErrorMessage = null
-                                stopDrafts = stopDrafts + StopDraft(minutesFromPrevious = "5")
+                                localErrorMessageState.value = null
+                                stopDraftsState.value = stopDrafts + StopDraft(minutesFromPrevious = "5")
                             },
                             enabled = !isSaving,
                             modifier = Modifier.fillMaxWidth()
@@ -300,8 +305,9 @@ private fun AddRouteDialog(
         confirmButton = {
             TextButton(
                 onClick = {
-                    localErrorMessage = validateStopDrafts(stopDrafts)
-                    if (localErrorMessage == null) {
+                    val validationError = validateStopDrafts(stopDrafts)
+                    localErrorMessageState.value = validationError
+                    if (validationError == null) {
                         onSave(routeName, routeDescription, stopDrafts.toStopsInput())
                     }
                 },
@@ -586,7 +592,7 @@ private fun RouteCard(
                         accentColor = Color(0xFF1AA75B)
                     )
                     Icon(
-                        imageVector = Icons.Filled.ArrowForward,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
                         contentDescription = null,
                         tint = Color(0xFF8D80D8),
                         modifier = Modifier.padding(top = 8.dp)

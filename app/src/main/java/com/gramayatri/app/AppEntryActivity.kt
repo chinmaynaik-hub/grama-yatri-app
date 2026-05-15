@@ -26,6 +26,7 @@ import com.gramayatri.app.ui.DriverModeScreen
 import com.gramayatri.app.ui.ForgotPasswordScreen
 import com.gramayatri.app.ui.LoginScreen
 import com.gramayatri.app.ui.RouteListScreen
+import com.gramayatri.app.ui.theme.GramayatrinewTheme
 import com.gramayatri.app.viewmodel.MainViewModel
 import kotlinx.coroutines.launch
 
@@ -77,9 +78,11 @@ class AppEntryActivity : ComponentActivity() {
             val authScope = rememberCoroutineScope()
             val currentUser = firebaseAuth.currentUser
             val currentUserId = currentUser?.uid ?: ""
+            val currentDisplayName = currentUser?.displayName.orEmpty()
+            val currentEmail = currentUser?.email.orEmpty()
             val currentUserName = when {
-                !currentUser?.displayName.isNullOrBlank() -> currentUser?.displayName ?: ""
-                !currentUser?.email.isNullOrBlank() -> currentUser?.email ?: ""
+                currentDisplayName.isNotBlank() -> currentDisplayName
+                currentEmail.isNotBlank() -> currentEmail
                 else -> currentUserId
             }
 
@@ -170,7 +173,7 @@ class AppEntryActivity : ComponentActivity() {
                 )
             }
 
-            MaterialTheme {
+            GramayatrinewTheme {
                 Surface(
                     modifier = Modifier.fillMaxSize(),
                     color = MaterialTheme.colorScheme.background
