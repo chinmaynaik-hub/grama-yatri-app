@@ -1,0 +1,39 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isCurrentUser(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function currentUserRole() {
+      return isAuthenticated() &&
+        exists(/databases/$(database)/documents/users/$(request.auth.uid))
+          ? get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role
+          : null;
+    }
+
+    function isDriverOrAdmin() {
+      return currentUserRole() in ['driver', 'admin'];
+    }
+
+    match /users/{userId} {
+      allow create: if isCurrentUser(userId);
+      allow read, update, delete: if isCurrentUser(userId) || isDriverOrAdmin();
+    }
+
+    match /routes/{routeId} {
+      allow read: if isAuthenticated();
+      allow create, update, delete: if isDriverOrAdmin();
+    }
+
+    match /locations/{routeId} {
+      allow read: if isAuthenticated();
+      allow create, update: if isDriverOrAdmin();
+      allow delete: if false;
+    }
+  }
+}
